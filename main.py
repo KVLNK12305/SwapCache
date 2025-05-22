@@ -285,6 +285,9 @@ def main():
         
         elif choice == '3':  # Display Cache State
             visualizer.display_cache_state(cache)
+            visualizer.display_cache_state(cache)
+            plot_cache_contents(cache)
+            plot_cache_metrics(cache.metrics.get_metrics())
         
         elif choice == '4':  # Flush Cache to Memory
             cache.flush_to_memory()
@@ -297,9 +300,7 @@ def main():
         
         else:
             print("Invalid choice. Please try again.")
-    visualizer.display_cache_state(cache)
-    plot_cache_contents(cache)
-    plot_cache_metrics(cache.metrics.get_metrics())
+    
 
 
 # Run the program
