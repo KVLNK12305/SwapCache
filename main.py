@@ -1,4 +1,4 @@
-# Integrated Cache Module with Menu-Driven Interface
+from plotter import plot_cache_contents, plot_cache_metrics
 
 # Doubly Linked List for LRU Cache
 class DLL:
@@ -297,6 +297,10 @@ def main():
         
         else:
             print("Invalid choice. Please try again.")
+    visualizer.display_cache_state(cache)
+    plot_cache_contents(cache)
+    plot_cache_metrics(cache.metrics.get_metrics())
+
 
 # Run the program
 if __name__ == "__main__":
