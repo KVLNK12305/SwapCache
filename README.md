@@ -58,7 +58,6 @@ cache.put("key", "value")  # Automatically optimizes over time
 
 ### 💾 **Enterprise-Grade Persistence**
 - **Write-through memory** ensures zero data loss
-- **Multiple backends**: In-memory, file system, Redis, MongoDB
 - **Crash recovery** with automatic cache warming
 - **Async persistence** doesn't block cache operations
 
@@ -192,9 +191,8 @@ SwapCache is **highly configurable** for different environments:
 
 ### **Free & Open Source**
 - **MIT License**: Use anywhere, including commercial projects
-- **No restrictions**: Modify, distribute, and monetize freely
 - **Active development**: Regular updates and improvements
-- **Community driven**: Feature requests and contributions welcome
+- **Community driven**: Feature requests and contributions are always welcome
 
 ### **Getting Help**
 - **Documentation**: Comprehensive guides and API reference
