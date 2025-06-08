@@ -4,6 +4,7 @@ class Node:
         self.val = data
         self.prev = None
         self.next = None
+        self.freq = 1
 
 class DLL:
     def __init__(self):
@@ -105,3 +106,4 @@ class LRU:
             new_node = Node(key, value)
             self.dll.insert_first(new_node)
             self.map[key] = new_node
+
