@@ -1,8 +1,10 @@
 class Node:
     def __init__(self,data,key,frequency=1):
         self.val = data
+        # for the linked list
         self.prev = None
         self.next = None
+        # for mapping purpose
         self.key = key
         self.freq = frequency
 class DLL:
