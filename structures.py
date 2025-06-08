@@ -1,12 +1,10 @@
 class Node:
-    def __init__(self,data,key,frequency=1):
+    def __init__(self,data):
         self.val = data
         # for the linked list
         self.prev = None
         self.next = None
         # for mapping purpose
-        self.key = key
-        self.freq = frequency
 class DLL:
     def __init__(self):
         self.length = 0
@@ -41,7 +39,9 @@ class DLL:
             raise Exception("Cannot perform operation on an empty list")
         self.head = self.head.next  
         if self.head:
-            self.head.prev = None  
+            self.head.prev = None 
+        else:
+            self.head = None 
         self.length -= 1
 
     def delete_last(self):
@@ -53,3 +53,8 @@ class DLL:
         else:
             self.head = None
         self.length -= 1
+    def show_values(self):
+        curr = self.head
+        while curr:
+            print(curr.val)
+            curr = curr.next
