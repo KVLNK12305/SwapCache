@@ -2,11 +2,11 @@
 import streamlit as st
 import random
 from plotter import plot_hit_miss_ratio, plot_hit_rate_over_time, plot_real_world_comparison, plot_benchmarks, plot_strategy_switches, plot_cache_state_evolution
-from Structures import DynamicCache  # Fixed import - use the actual class instead of function
+from structures import DynamicCache  
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Set up the page
+# Set up the pag
 st.set_page_config(layout="wide", page_title="Dynamic Cache Visualizer")
 
 # Header
@@ -16,7 +16,7 @@ This interactive tool demonstrates how LRU and LFU cache strategies perform in d
 and when it's best to switch dynamically between them.
 """)
 
-# Main layout with columns for existing plots
+
 col1, col2 = st.columns([1, 1])
 
 with col1:
@@ -334,10 +334,10 @@ if ops and len(ops) > 0:
             with st.expander("🔧 Debug Information", expanded=False):
                 st.write("**Error Details:**")
                 st.code(str(e))
-                st.write("**Available classes from Structures module:**")
+                st.write("**Available classes from structures module:**")
                 try:
-                    import Structures
-                    available_classes = [attr for attr in dir(Structures) if not attr.startswith('_') and isinstance(getattr(Structures, attr), type)]
+                    import structures
+                    available_classes = [attr for attr in dir(structures) if not attr.startswith('_') and isinstance(getattr(structures, attr), type)]
                     st.code(", ".join(available_classes))
                 except Exception as import_error:
                     st.code(f"Import error: {str(import_error)}")
