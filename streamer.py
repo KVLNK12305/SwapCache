@@ -10,7 +10,7 @@ import numpy as np
 st.set_page_config(layout="wide", page_title="Dynamic Cache Visualizer")
 
 # Header
-st.title("🔁 Dynamic Cache Strategy Visualizer")
+st.title("Dynamic Cache Strategy Visualizer")
 st.markdown(""" 
 This interactive tool demonstrates how LRU and LFU cache strategies perform in different scenarios, 
 and when it's best to switch dynamically between them.
@@ -20,7 +20,7 @@ and when it's best to switch dynamically between them.
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    st.subheader("📊 Real-World Performance Comparison")
+    st.subheader("Real-World Performance Comparison")
     try:
         fig = plot_real_world_comparison()
         st.pyplot(fig, use_container_width=True)
@@ -41,7 +41,7 @@ with col2:
 st.divider()
 
 # Input simulation section
-st.subheader("📥 Cache Simulation Configuration")
+st.subheader("Cache Simulation Configuration")
 
 # Configuration in columns
 config_col1, config_col2, config_col3 = st.columns([1, 1, 1])
@@ -116,7 +116,7 @@ else:  # Manual mode
             ops = [int(x.strip()) for x in manual_input.split(",") if x.strip() and x.strip().lstrip('-').isdigit()]  # Handle negative numbers
             
             if ops:
-                st.success(f"✅ Successfully parsed {len(ops)} operations")
+                st.success(f"Successfully parsed {len(ops)} operations")
                 
                 # Show preview and stats side by side
                 preview_col, stats_col = st.columns([2, 1])
@@ -152,7 +152,7 @@ elif mode == "Manual" and manual_input:
 # Display simulation when ops are available
 if ops and len(ops) > 0:
     st.divider()
-    st.markdown("### 🚀 Cache Simulation & Results")
+    st.markdown("### Cache Simulation & Results")
     
     # Simulation controls
     sim_col1, sim_col2, sim_col3 = st.columns([1, 1, 1])
@@ -171,7 +171,7 @@ if ops and len(ops) > 0:
         
         try:
             # Run simulation using the DynamicCache class
-            with st.spinner("🔄 Running cache simulation..."):
+            with st.spinner("Running cache simulation..."):
                 cache = DynamicCache(capacity)
                 
                 # Track hits, misses, and other metrics
@@ -183,22 +183,18 @@ if ops and len(ops) > 0:
                 
                 # Run operations
                 for i, key in enumerate(ops):
-                    # Simulate GET operation (checking if key exists by trying to get it)
                     result = cache.get(key)
-                    
                     if result != -1:
                         hits += 1
                     else:
                         misses += 1
                         # PUT operation for cache miss
                         cache.put(key, f"value_{key}")
-                    
-                    # Track strategy switches
+                    # logs of strategy switches
                     if cache.current_strategy != current_strategy:
                         strategy_switches.append(f"Step {i+1}: Switched to {cache.current_strategy}")
                         current_strategy = cache.current_strategy
-                    
-                    # Calculate running hit rate
+                    # running hit rate
                     total_so_far = hits + misses
                     hit_rate_so_far = (hits / total_so_far) * 100 if total_so_far > 0 else 0
                     hit_log.append((i+1, hit_rate_so_far))
@@ -255,10 +251,9 @@ if ops and len(ops) > 0:
                     try:
                         fig_time = plot_hit_rate_over_time(hit_log)
                         st.pyplot(fig_time, use_container_width=True)
-                        plt.close(fig_time)  # Free memory
+                        plt.close(fig_time) 
                     except Exception as e:
                         st.error(f"Error plotting hit rate over time: {str(e)}")
-                        # Fallback simple line chart
                         steps, rates = zip(*hit_log)
                         
                         fig, ax = plt.subplots(figsize=(10, 6))
@@ -271,8 +266,6 @@ if ops and len(ops) > 0:
                         plt.close(fig)
                 else:
                     st.info("Insufficient data for time-series plot")
-            
-            # Strategy switching information
             if strategy_switches and len(strategy_switches) > 0:
                 st.markdown("#### 🔄 Strategy Switching Analysis")
                 switch_col1, switch_col2 = st.columns([1, 1])
@@ -291,7 +284,7 @@ if ops and len(ops) > 0:
                 st.info("No strategy switches occurred during this simulation")
             
             # Additional insights
-            with st.expander("📈 Detailed Analysis", expanded=False):
+            with st.expander("Detailed Analysis", expanded=False):
                 unique_keys = len(set(ops))
                 most_frequent = max(set(ops), key=ops.count) if ops else None
                 key_frequency = ops.count(most_frequent) if most_frequent else 0
@@ -364,7 +357,7 @@ if ops and len(ops) > 0:
 st.divider()
 st.markdown("""
 <div style='text-align: center; color: #666; padding: 20px;'>
-    <p>🔁 Dynamic Cache Strategy Visualizer | Built with Streamlit</p>
+    <p>Dynamic Cache Strategy Visualizer | Built with Streamlit</p>
     <p><em>Analyze and optimize your caching strategies with real-time visualizations</em></p>
 </div>
 """, unsafe_allow_html=True)
