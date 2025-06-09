@@ -16,10 +16,37 @@ def plot_real_world_comparison():
 
     ax.set_xticks(x)
     ax.set_xticklabels(companies)
+    ax.set_facecolor('white')
+    ax.spines['bottom'].set_color('black')
+    ax.spines['top'].set_color('white')
+    ax.spines['left'].set_color('black')
+    ax.spines['right'].set_color('white')
     ax.set_ylabel("Efficiency %")
     ax.set_title("Cache Strategy Comparison in E-Commerce")
     ax.legend()
-    st.pyplot(fig)
+    return fig
+
+def plot_benchmarks():
+    workloads = ["E-commerce", "Social Media", "Analytics", "Mixed Pattern"]
+    lru = [78.2, 82.1, 69.5, 75.8]
+    lfu = [71.4, 74.8, 83.2, 76.2]
+    swapcache = [86.7, 89.3, 88.1, 87.4]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(workloads, lru, marker='o', label="LRU Only")
+    ax.plot(workloads, lfu, marker='s', label="LFU Only")
+    ax.plot(workloads, swapcache, marker='^', label="SwapCache (Dynamic)")
+
+    ax.set_title("Cache Strategy Efficiency Across Workload Types")
+    ax.set_xlabel("Workload Type")
+    ax.set_ylabel("Efficiency (%)")
+    ax.set_ylim(60, 95)
+    ax.grid(True, linestyle='--', alpha=0.6)
+    ax.legend()
+    fig.tight_layout()
+    
+    return fig
+
 
 def plot_hit_miss_ratio(hits, misses):
     fig, ax = plt.subplots()
