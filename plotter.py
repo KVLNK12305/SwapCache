@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from io import BytesIO
 
 
 def plot_hit_miss_ratio(hits, misses):
