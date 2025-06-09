@@ -1,4 +1,5 @@
 import time
+
 class Node:
     def __init__(self, key, data):
         self.key = key
@@ -109,8 +110,65 @@ class LRU:
             self.map[key] = new_node
 
 class LFU:
-    pass
+    def __init__(self, capacity):  # Fixed parameter name
+        self.capacity = capacity   # Fixed attribute name
+        self.map = {}
+        self.freq_map = {}
+        self.min_freq = 0
 
+    def get_freq_dll(self, freq):  # Fixed method name (was get_node)
+        if freq not in self.freq_map:
+            self.freq_map[freq] = DLL()
+        return self.freq_map[freq]
+    
+    def update_freq(self, node):
+        old_f = node.freq
+        new_f = old_f + 1
+
+        old_dll = self.freq_map[old_f]  # Fixed variable name
+        old_dll.remove_node(node)
+
+        if old_f == self.min_freq and old_dll.length == 0:
+            self.min_freq += 1
+
+        node.freq = new_f
+        new_dll = self.get_freq_dll(new_f)  # Fixed method call
+        new_dll.insert_first(node)
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self.update_freq(node)
+        return node.val
+    
+    def put(self, key, value):  # Added missing put method
+        if self.capacity <= 0:
+            return
+        
+        if key in self.map:
+            # Update existing key
+            node = self.map[key]
+            node.val = value
+            self.update_freq(node)
+        else:
+            # Add new key
+            if len(self.map) >= self.capacity:
+                # Remove least frequently used item
+                if self.min_freq in self.freq_map:
+                    min_freq_dll = self.freq_map[self.min_freq]
+                    if min_freq_dll.length > 0:
+                        lfu_node = min_freq_dll.delete_last()
+                        if lfu_node:
+                            del self.map[lfu_node.key]
+            
+            # Create new node and add it
+            new_node = Node(key, value)
+            new_node.freq = 1
+            self.map[key] = new_node
+            freq_1_dll = self.get_freq_dll(1)
+            freq_1_dll.insert_first(new_node)
+            self.min_freq = 1
 
 class Stats:
     def __init__(self, strategy):
@@ -146,5 +204,58 @@ class Stats:
             'miss_rate': miss_rate
         }
 
-def dynamic_Switcher(self,capacity):
-    pass
+class DynamicCache:  # Created proper class structure
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.lru_cache = LRU(capacity)
+        self.lfu_cache = LFU(capacity)
+        self.current_strategy = "LRU"
+        self.lru_stats = Stats(self.lru_cache)
+        self.lfu_stats = Stats(self.lfu_cache)
+        self.switch_threshold = 10
+        self.operation_count = 0
+
+    def dynamic_switcher(self):  # Fixed method name and indentation
+        if self.operation_count < self.switch_threshold:
+            return
+        
+        lru_performance = self.lru_stats.stats()
+        lfu_performance = self.lfu_stats.stats()
+        
+        # Switch to the strategy with better hit rate
+        if lfu_performance['hit_rate'] > lru_performance['hit_rate']:
+            if self.current_strategy != "LFU":
+                print(f"Switching to LFU (hit rate: {lfu_performance['hit_rate']:.2f})")
+                self.current_strategy = "LFU"
+        else:
+            if self.current_strategy != "LRU":
+                print(f"Switching to LRU (hit rate: {lru_performance['hit_rate']:.2f})")
+                self.current_strategy = "LRU"
+    
+    def get(self, key):  # Fixed indentation and method calls
+        self.operation_count += 1
+        
+        # Execute on both caches for comparison
+        lru_result = self.lru_stats.get(key)
+        lfu_result = self.lfu_stats.get(key)
+        
+        # Return result from current strategy
+        result = lru_result if self.current_strategy == "LRU" else lfu_result
+        
+        # Consider switching strategy
+        if self.operation_count % self.switch_threshold == 0:
+            self.dynamic_switcher()  # Fixed method call
+        
+        return result
+
+    def put(self, key, value):  # Fixed indentation and method calls
+        self.operation_count += 1
+        
+        # Execute on both caches
+        self.lru_stats.put(key, value)
+        self.lfu_stats.put(key, value)
+        
+        # Consider switching strategy
+        if self.operation_count % self.switch_threshold == 0:
+            self.dynamic_switcher()  # Fixed method call
+

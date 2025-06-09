@@ -1,8 +1,8 @@
 # streamer.py
 import streamlit as st
 import random
-from plotter import plot_hit_miss_ratio, plot_hit_rate_over_time, plot_real_world_comparison, plot_benchmarks
-from Structures import dynamic_Switcher
+from plotter import plot_hit_miss_ratio, plot_hit_rate_over_time, plot_real_world_comparison, plot_benchmarks, plot_strategy_switches, plot_cache_state_evolution
+from Structures import DynamicCache  # Fixed import - use the actual class instead of function
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -21,13 +21,21 @@ col1, col2 = st.columns([1, 1])
 
 with col1:
     st.subheader("📊 Real-World Performance Comparison")
-    fig = plot_real_world_comparison()
-    st.pyplot(fig, use_container_width=True)
+    try:
+        fig = plot_real_world_comparison()
+        st.pyplot(fig, use_container_width=True)
+        plt.close(fig)  # Free memory
+    except Exception as e:
+        st.error(f"Error loading real-world comparison: {str(e)}")
 
 with col2:
     st.subheader("🏆 Benchmark Results")
-    fig1 = plot_benchmarks()
-    st.pyplot(fig1, use_container_width=True)
+    try:
+        fig1 = plot_benchmarks()
+        st.pyplot(fig1, use_container_width=True)
+        plt.close(fig1)  # Free memory
+    except Exception as e:
+        st.error(f"Error loading benchmarks: {str(e)}")
 
 # Divider
 st.divider()
@@ -105,7 +113,7 @@ else:  # Manual mode
     
     if manual_input:
         try:
-            ops = [int(x.strip()) for x in manual_input.split(",") if x.strip() and x.strip().isdigit()]
+            ops = [int(x.strip()) for x in manual_input.split(",") if x.strip() and x.strip().lstrip('-').isdigit()]  # Handle negative numbers
             
             if ops:
                 st.success(f"✅ Successfully parsed {len(ops)} operations")
@@ -137,7 +145,7 @@ if mode == "Random" and "generated_ops" in st.session_state:
     ops = st.session_state["generated_ops"]
 elif mode == "Manual" and manual_input:
     try:
-        ops = [int(x.strip()) for x in manual_input.split(",") if x.strip() and x.strip().isdigit()]
+        ops = [int(x.strip()) for x in manual_input.split(",") if x.strip() and x.strip().lstrip('-').isdigit()]
     except:
         ops = None
 
@@ -162,29 +170,40 @@ if ops and len(ops) > 0:
             st.session_state['auto_simulate'] = True
         
         try:
-            # Run simulation
+            # Run simulation using the DynamicCache class
             with st.spinner("🔄 Running cache simulation..."):
-                result = dynamic_Switcher(ops, capacity)
-            
-            # Extract results (adjust based on your dynamic_Switcher return format)
-            if hasattr(result, '__dict__'):
-                hits = getattr(result, 'hits', 0)
-                misses = getattr(result, 'misses', 0)
-                hit_log = getattr(result, 'hit_log', [])
-                strategy_switches = getattr(result, 'switches', [])
-            elif isinstance(result, dict):
-                hits = result.get('hits', 0)
-                misses = result.get('misses', 0)
-                hit_log = result.get('hit_log', [])
-                strategy_switches = result.get('switches', [])
-            else:
-                # Fallback - calculate basic metrics
-                hits = max(0, len(ops) - len(set(ops)))  # Simple estimation
-                misses = len(set(ops))
+                cache = DynamicCache(capacity)
+                
+                # Track hits, misses, and other metrics
+                hits = 0
+                misses = 0
                 hit_log = []
                 strategy_switches = []
+                current_strategy = cache.current_strategy
+                
+                # Run operations
+                for i, key in enumerate(ops):
+                    # Simulate GET operation (checking if key exists by trying to get it)
+                    result = cache.get(key)
+                    
+                    if result != -1:
+                        hits += 1
+                    else:
+                        misses += 1
+                        # PUT operation for cache miss
+                        cache.put(key, f"value_{key}")
+                    
+                    # Track strategy switches
+                    if cache.current_strategy != current_strategy:
+                        strategy_switches.append(f"Step {i+1}: Switched to {cache.current_strategy}")
+                        current_strategy = cache.current_strategy
+                    
+                    # Calculate running hit rate
+                    total_so_far = hits + misses
+                    hit_rate_so_far = (hits / total_so_far) * 100 if total_so_far > 0 else 0
+                    hit_log.append((i+1, hit_rate_so_far))
             
-            # Calculate metrics
+            # Calculate final metrics
             total_ops = hits + misses
             hit_rate = (hits / total_ops * 100) if total_ops > 0 else 0
             
@@ -217,6 +236,16 @@ if ops and len(ops) > 0:
                         plt.close(fig_ratio)  # Free memory
                     except Exception as e:
                         st.error(f"Error plotting hit/miss ratio: {str(e)}")
+                        # Fallback simple chart
+                        labels = ['Hits', 'Misses']
+                        sizes = [hits, misses]
+                        colors = ['#28a745', '#dc3545']
+                        
+                        fig, ax = plt.subplots(figsize=(8, 6))
+                        ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
+                        ax.set_title('Hit vs Miss Ratio')
+                        st.pyplot(fig, use_container_width=True)
+                        plt.close(fig)
                 else:
                     st.info("No hit/miss data to display")
             
@@ -229,8 +258,19 @@ if ops and len(ops) > 0:
                         plt.close(fig_time)  # Free memory
                     except Exception as e:
                         st.error(f"Error plotting hit rate over time: {str(e)}")
+                        # Fallback simple line chart
+                        steps, rates = zip(*hit_log)
+                        
+                        fig, ax = plt.subplots(figsize=(10, 6))
+                        ax.plot(steps, rates, marker='o', linewidth=2, markersize=4)
+                        ax.set_xlabel('Operation Number')
+                        ax.set_ylabel('Hit Rate (%)')
+                        ax.set_title('Hit Rate Over Time')
+                        ax.grid(True, alpha=0.3)
+                        st.pyplot(fig, use_container_width=True)
+                        plt.close(fig)
                 else:
-                    st.info("No time-series data available. Enable hit_log in your dynamic_Switcher function.")
+                    st.info("Insufficient data for time-series plot")
             
             # Strategy switching information
             if strategy_switches and len(strategy_switches) > 0:
@@ -247,6 +287,8 @@ if ops and len(ops) > 0:
                 with st.expander("View Strategy Switch Details", expanded=False):
                     for i, switch in enumerate(strategy_switches):
                         st.write(f"**Switch {i+1}:** {switch}")
+            else:
+                st.info("No strategy switches occurred during this simulation")
             
             # Additional insights
             with st.expander("📈 Detailed Analysis", expanded=False):
@@ -260,6 +302,7 @@ if ops and len(ops) > 0:
                 - Unique keys accessed: {unique_keys}
                 - Cache utilization: {min(unique_keys, capacity)}/{capacity} slots
                 - Most accessed key: {most_frequent} ({key_frequency} times)
+                - Final strategy: {cache.current_strategy}
                 
                 **Cache Efficiency Breakdown:**
                 - **Overall Performance:** {efficiency} ({hit_rate:.1f}% hit rate)
@@ -285,21 +328,19 @@ if ops and len(ops) > 0:
         
         except Exception as e:
             st.error(f"❌ Simulation failed: {str(e)}")
-            st.info("Make sure your `dynamic_Switcher` function is properly implemented and accessible.")
+            st.info("Make sure your `DynamicCache` class is properly implemented and accessible.")
             
             # Show debug info
             with st.expander("🔧 Debug Information", expanded=False):
                 st.write("**Error Details:**")
                 st.code(str(e))
-                st.write("**Expected dynamic_Switcher return format:**")
-                st.code("""
-{
-    'hits': int,
-    'misses': int, 
-    'hit_log': [(step, hit_rate), ...],
-    'switches': [switch_info, ...]
-}
-                """)
+                st.write("**Available classes from Structures module:**")
+                try:
+                    import Structures
+                    available_classes = [attr for attr in dir(Structures) if not attr.startswith('_') and isinstance(getattr(Structures, attr), type)]
+                    st.code(", ".join(available_classes))
+                except Exception as import_error:
+                    st.code(f"Import error: {str(import_error)}")
     
     else:
         # Show preview without simulation

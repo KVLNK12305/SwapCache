@@ -91,54 +91,64 @@ def plot_hit_miss_ratio(hits, misses):
     return fig
 
 def plot_hit_rate_over_time(hit_log):
-    
     if not hit_log or len(hit_log) == 0:
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.text(0.5, 0.5, 'No hit rate data available', 
+        fig, ax = plt.subplots(figsize=(8, 5))  # Reduced figure size
+        ax.text(0.5, 0.5, 'No hit rate data available',
                 transform=ax.transAxes, ha='center', va='center',
                 fontsize=14, style='italic')
         ax.set_title("Hit Rate Over Time", fontsize=16, fontweight='bold')
+        plt.tight_layout()  # Important: removes extra whitespace
         return fig
     
     steps, rates = zip(*hit_log)
     
-    fig, ax = plt.subplots(figsize=(10, 6))
+    # Convert rates to proper percentage format (0-100 instead of 0-1 if needed)
+    # Check if rates are in decimal format (0-1) and convert to percentage
+    max_rate = max(rates)
+    if max_rate <= 1.0:
+        rates = [r * 100 for r in rates]  # Convert to percentage
     
-    ax.plot(steps, rates, color="#1f77b4", linewidth=2.5, label="Hit Rate", marker='o', markersize=4)
+    fig, ax = plt.subplots(figsize=(8, 5))  # Reduced figure size for Streamlit
     
+    ax.plot(steps, rates, color="#1f77b4", linewidth=2.5, label="Hit Rate", 
+            marker='o', markersize=3)  # Smaller markers
     
-    ax.fill_between(steps, rates, alpha=0.3, color="#1f77b4")
+    ax.fill_between(steps, rates, alpha=0.2, color="#1f77b4")  # Reduced alpha
     
-    
+    # Add moving average only if there are enough data points
     if len(steps) > 5:
         window_size = max(3, len(steps) // 10)
         rates_array = np.array(rates)
         moving_avg = np.convolve(rates_array, np.ones(window_size)/window_size, mode='valid')
         moving_steps = steps[window_size-1:]
-        ax.plot(moving_steps, moving_avg, color="red", linewidth=2, 
+        ax.plot(moving_steps, moving_avg, color="red", linewidth=2,
                 linestyle='--', alpha=0.8, label=f"Moving Average ({window_size})")
     
     # Styling
-    ax.set_xlabel("Operation Step", fontsize=12, fontweight='bold')
-    ax.set_ylabel("Hit Rate (%)", fontsize=12, fontweight='bold')
-    ax.set_title("Hit Rate Over Time", fontsize=16, fontweight='bold', pad=20)
+    ax.set_xlabel("Operation Step", fontsize=11, fontweight='bold')
+    ax.set_ylabel("Hit Rate (%)", fontsize=11, fontweight='bold')
+    ax.set_title("Hit Rate Over Time", fontsize=14, fontweight='bold', pad=15)
     ax.grid(True, alpha=0.3, linestyle='-')
     
+    # Set proper y-axis limits
+    ax.set_ylim(0, max(100, max(rates) * 1.1))  # Ensure 0-100 range or slightly above max
     
-    ax.set_ylim(0, 1)
-    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'{y*100:.0f}%'))
+    # Add average line
     avg_rate = np.mean(rates)
-    ax.axhline(y=avg_rate, color='green', linestyle=':', alpha=0.8, linewidth=2)
-    ax.text(max(steps)*0.02, avg_rate + 0.02, f'Avg: {avg_rate*100:.1f}%', 
-            fontweight='bold', color='green')
+    ax.axhline(y=avg_rate, color='green', linestyle=':', alpha=0.8, linewidth=1.5)
+    ax.text(max(steps)*0.02, avg_rate + max(rates)*0.02, f'Avg: {avg_rate:.1f}%',
+            fontweight='bold', color='green', fontsize=9)
     
-    ax.legend(loc='best', framealpha=0.9)
+    # Legend
+    ax.legend(loc='best', framealpha=0.9, fontsize=9)
     
-    
+    # Clean up spines
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     
+    # CRITICAL: This removes extra whitespace
     plt.tight_layout()
+    
     return fig
 
 def plot_cache_state_evolution(cache_states, capacity):
