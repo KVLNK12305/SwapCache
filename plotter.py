@@ -49,20 +49,163 @@ def plot_benchmarks():
 
 
 def plot_hit_miss_ratio(hits, misses):
-    fig, ax = plt.subplots()
-    ax.bar(["Hits", "Misses"], [hits, misses], color=["green", "red"])
-    ax.set_title("Hit vs Miss Ratio")
-    ax.set_ylabel("Count")
-    plt.show()
-
+    """
+    Create a bar chart showing hit vs miss ratio with enhanced styling
+    """
+    fig, ax = plt.subplots(figsize=(8, 6))
+    
+    # Data and colors
+    categories = ["Hits", "Misses"]
+    values = [hits, misses]
+    colors = ["#2E8B57", "#DC143C"]  # Sea green and crimson
+    
+    # Create bars with better styling
+    bars = ax.bar(categories, values, color=colors, alpha=0.8, edgecolor='black', linewidth=1)
+    
+    # Add value labels on bars
+    for bar, value in zip(bars, values):
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., height + max(values)*0.01,
+                f'{value}', ha='center', va='bottom', fontweight='bold', fontsize=12)
+    
+    # Styling
+    ax.set_title("Cache Hit vs Miss Ratio", fontsize=16, fontweight='bold', pad=20)
+    ax.set_ylabel("Count", fontsize=12, fontweight='bold')
+    ax.grid(axis='y', alpha=0.3, linestyle='--')
+    
+    # Add percentage annotations
+    total = hits + misses
+    if total > 0:
+        hit_pct = (hits / total) * 100
+        miss_pct = (misses / total) * 100
+        ax.text(0, hits/2, f'{hit_pct:.1f}%', ha='center', va='center', 
+                fontweight='bold', fontsize=14, color='white')
+        ax.text(1, misses/2, f'{miss_pct:.1f}%', ha='center', va='center', 
+                fontweight='bold', fontsize=14, color='white')
+    
+    # Remove top and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    plt.tight_layout()
+    return fig
 
 def plot_hit_rate_over_time(hit_log):
+    
+    if not hit_log or len(hit_log) == 0:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.text(0.5, 0.5, 'No hit rate data available', 
+                transform=ax.transAxes, ha='center', va='center',
+                fontsize=14, style='italic')
+        ax.set_title("Hit Rate Over Time", fontsize=16, fontweight='bold')
+        return fig
+    
     steps, rates = zip(*hit_log)
-    fig, ax = plt.subplots()
-    ax.plot(steps, rates, color="blue", label="Hit Rate")
-    ax.set_xlabel("Step")
-    ax.set_ylabel("Hit Rate")
-    ax.set_title("Hit Rate Over Time")
-    ax.grid(True)
-    ax.legend()
-    plt.show()
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    ax.plot(steps, rates, color="#1f77b4", linewidth=2.5, label="Hit Rate", marker='o', markersize=4)
+    
+    
+    ax.fill_between(steps, rates, alpha=0.3, color="#1f77b4")
+    
+    
+    if len(steps) > 5:
+        window_size = max(3, len(steps) // 10)
+        rates_array = np.array(rates)
+        moving_avg = np.convolve(rates_array, np.ones(window_size)/window_size, mode='valid')
+        moving_steps = steps[window_size-1:]
+        ax.plot(moving_steps, moving_avg, color="red", linewidth=2, 
+                linestyle='--', alpha=0.8, label=f"Moving Average ({window_size})")
+    
+    # Styling
+    ax.set_xlabel("Operation Step", fontsize=12, fontweight='bold')
+    ax.set_ylabel("Hit Rate (%)", fontsize=12, fontweight='bold')
+    ax.set_title("Hit Rate Over Time", fontsize=16, fontweight='bold', pad=20)
+    ax.grid(True, alpha=0.3, linestyle='-')
+    
+    
+    ax.set_ylim(0, 1)
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'{y*100:.0f}%'))
+    avg_rate = np.mean(rates)
+    ax.axhline(y=avg_rate, color='green', linestyle=':', alpha=0.8, linewidth=2)
+    ax.text(max(steps)*0.02, avg_rate + 0.02, f'Avg: {avg_rate*100:.1f}%', 
+            fontweight='bold', color='green')
+    
+    ax.legend(loc='best', framealpha=0.9)
+    
+    
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    plt.tight_layout()
+    return fig
+
+def plot_cache_state_evolution(cache_states, capacity):
+    
+    if not cache_states:
+        return None
+        
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    steps = range(len(cache_states))
+    all_keys = set()
+    for state in cache_states:
+        all_keys.update(state)
+    
+    all_keys = sorted(list(all_keys))
+    matrix = np.zeros((len(all_keys), len(cache_states)))
+    
+    for step, state in enumerate(cache_states):
+        for key in state:
+            if key in all_keys:
+                key_idx = all_keys.index(key)
+                matrix[key_idx, step] = 1
+    
+    im = ax.imshow(matrix, cmap='RdYlGn', aspect='auto', interpolation='nearest')
+    
+    ax.set_xlabel("Operation Step", fontsize=12, fontweight='bold')
+    ax.set_ylabel("Cache Keys", fontsize=12, fontweight='bold')
+    ax.set_title("Cache State Evolution", fontsize=16, fontweight='bold', pad=20)
+    
+
+    ax.set_yticks(range(len(all_keys)))
+    ax.set_yticklabels([f'Key {key}' for key in all_keys])
+    
+    # Add colorbar
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.set_label('In Cache', rotation=270, labelpad=15, fontweight='bold')
+    
+    plt.tight_layout()
+    return fig
+
+def plot_strategy_switches(switch_log, operations):
+    """
+    Optional: Visualize when strategy switches occur
+    """
+    if not switch_log:
+        return None
+        
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    # Plot operation timeline
+    ax.plot(range(len(operations)), [1]*len(operations), 'b-', alpha=0.3, linewidth=2)
+    
+    # Mark strategy switches
+    for switch in switch_log:
+        step = switch.get('step', 0)
+        old_strategy = switch.get('from', 'Unknown')
+        new_strategy = switch.get('to', 'Unknown')
+        
+        ax.axvline(x=step, color='red', linestyle='--', alpha=0.8, linewidth=2)
+        ax.text(step, 1.1, f'{old_strategy}→{new_strategy}', 
+                rotation=90, ha='center', va='bottom', fontweight='bold')
+    
+    ax.set_xlabel("Operation Step", fontsize=12, fontweight='bold')
+    ax.set_ylabel("Timeline", fontsize=12, fontweight='bold')
+    ax.set_title("Cache Strategy Switches", fontsize=16, fontweight='bold', pad=20)
+    ax.set_ylim(0.5, 1.5)
+    ax.set_yticks([])
+    
+    plt.tight_layout()
+    return fig
