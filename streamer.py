@@ -1,8 +1,10 @@
 # streamer.py
 import streamlit as st
 import random
-from plotter import plot_hit_miss_ratio, plot_real_world_comparison, plot_hit_rate_over_time
+from plotter import plot_hit_miss_ratio, plot_hit_rate_over_time
 from Structures import dynamic_Switcher
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Set up the page
 st.set_page_config(layout="centered", page_title="Dynamic Cache Visualizer")
@@ -11,6 +13,25 @@ st.markdown("""
 This interactive tool demonstrates how LRU and LFU cache strategies perform
 in different scenarios, and when it's best to switch dynamically between them.
 """)
+def plot_real_world_comparison():
+    companies = ["Amazon", "Flipkart", "Alibaba"]
+    lru = [75, 68, 60]
+    lfu = [72, 73, 66]
+    dynamic = [80, 78, 73]
+
+    x = np.arange(len(companies))
+    width = 0.2
+    fig, ax = plt.subplots()
+    ax.bar(x - width, lru, width, label="LRU")
+    ax.bar(x, lfu, width, label="LFU")
+    ax.bar(x + width, dynamic, width, label="LRU+LFU")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(companies)
+    ax.set_ylabel("Efficiency %")
+    ax.set_title("Cache Strategy Comparison in E-Commerce")
+    ax.legend()
+    st.pyplot(fig)
 
 st.subheader("📥 Input Simulation")
 capacity = st.number_input("Cache Capacity", min_value=1, value=5)
@@ -41,36 +62,3 @@ else:  # Manual
         except ValueError:
             st.error("Please enter valid integers separated by commas.")
 
-if ops and st.button("Run Simulation"):
-    cache = dynamic_Switcher(capacity)
-    hits = 0
-    misses = 0
-    switch_log = []
-    hit_log = []
-
-    for i, key in enumerate(ops):
-        value = key * 10
-        result, switched = cache.access(key, value)
-        hits += result == "HIT"
-        misses += result == "MISS"
-        hit_log.append((i, hits / (i + 1)))
-        if switched:
-            switch_log.append((i, cache.strategy))
-
-    st.success(f"✅ Simulation Complete: {hits} Hits / {misses} Misses")
-
-    st.subheader("📊 Performance Graphs")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.pyplot(plot_hit_miss_ratio(hits, misses))
-    with col2:
-        st.pyplot(plot_real_world_comparison())
-
-    st.pyplot(plot_hit_rate_over_time(hit_log))
-
-    if switch_log:
-        st.subheader("🔁 Strategy Switching Log")
-        for step, strat in switch_log:
-            st.markdown(f"- Switched to **{strat}** at operation #{step}")
-    else:
-        st.info("No switching occurred during this simulation.")

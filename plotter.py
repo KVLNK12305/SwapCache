@@ -1,15 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-def plot_hit_miss_ratio(hits, misses):
-    fig, ax = plt.subplots()
-    ax.bar(["Hits", "Misses"], [hits, misses], color=["green", "red"])
-    ax.set_title("Hit vs Miss Ratio")
-    ax.set_ylabel("Count")
-    return fig
-
-
 def plot_real_world_comparison():
     companies = ["Amazon", "Flipkart", "Alibaba"]
     lru = [75, 68, 60]
@@ -28,7 +19,14 @@ def plot_real_world_comparison():
     ax.set_ylabel("Efficiency %")
     ax.set_title("Cache Strategy Comparison in E-Commerce")
     ax.legend()
-    return fig
+    st.pyplot(fig)
+
+def plot_hit_miss_ratio(hits, misses):
+    fig, ax = plt.subplots()
+    ax.bar(["Hits", "Misses"], [hits, misses], color=["green", "red"])
+    ax.set_title("Hit vs Miss Ratio")
+    ax.set_ylabel("Count")
+    plt.show()
 
 
 def plot_hit_rate_over_time(hit_log):
@@ -40,4 +38,4 @@ def plot_hit_rate_over_time(hit_log):
     ax.set_title("Hit Rate Over Time")
     ax.grid(True)
     ax.legend()
-    return fig
+    plt.show()

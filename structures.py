@@ -111,10 +111,8 @@ class LRU:
 class LFU:
     pass
 
-def dynamic_Switcher(self,capacity):pass
 
-
-class CacheStatsWrapper:
+class Stats:
     def __init__(self, strategy):
         self.cache = strategy
         self.hits = 0
@@ -147,3 +145,6 @@ class CacheStatsWrapper:
             'hit_rate': hit_rate,
             'miss_rate': miss_rate
         }
+
+def dynamic_Switcher(self,capacity):
+    pass
