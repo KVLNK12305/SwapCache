@@ -1,3 +1,4 @@
+import time
 class Node:
     def __init__(self, key, data):
         self.key = key
@@ -107,3 +108,42 @@ class LRU:
             self.dll.insert_first(new_node)
             self.map[key] = new_node
 
+class LFU:
+    pass
+
+def dynamic_Switcher(self,capacity):pass
+
+
+class CacheStatsWrapper:
+    def __init__(self, strategy):
+        self.cache = strategy
+        self.hits = 0
+        self.misses = 0
+
+    def get(self, key):
+        start = time.time()
+        value = self.cache.get(key)
+        end = time.time()
+        if value != -1:
+            self.hits += 1
+        else:
+            self.misses += 1
+        print(f"GET {key} took {end - start:.6f}s")
+        return value
+
+    def put(self, key, value):
+        start = time.time()
+        self.cache.put(key, value)
+        end = time.time()
+        print(f"PUT {key} took {end - start:.6f}s")
+
+    def stats(self):
+        total = self.hits + self.misses
+        hit_rate = self.hits / total if total > 0 else 0
+        miss_rate = self.misses / total if total > 0 else 0
+        return {
+            'hits': self.hits,
+            'misses': self.misses,
+            'hit_rate': hit_rate,
+            'miss_rate': miss_rate
+        }
